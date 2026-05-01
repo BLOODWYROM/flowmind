@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { signIn } from 'next-auth/react';
-import { BrainCircuit, GitBranch } from 'lucide-react';
+import { BrainCircuit, GitBranch, Mail } from 'lucide-react';
 
 export default function LoginPage() {
   return (
