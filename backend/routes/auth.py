@@ -8,12 +8,15 @@ from ..models import User, Integration
 
 router = APIRouter()
 
-class MockAuthRequest(BaseModel):
+class SyncUserRequest(BaseModel):
+    id: str
     email: str
     name: str
 
-@router.post("/mock-login")
-async def mock_login(req: MockAuthRequest, db: AsyncSession = Depends(get_db)):
+@router.post("/sync-user")
+async def sync_user(req: SyncUserRequest, db: AsyncSession = Depends(get_db)):
+    # Since NextAuth provides string IDs, we will store it, but wait, our User model has Integer ID!
+    # Let's map the email to a user. If the email doesn't exist, create it.
     result = await db.execute(select(User).where(User.email == req.email))
     user = result.scalars().first()
     

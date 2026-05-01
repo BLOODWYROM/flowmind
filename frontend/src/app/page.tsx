@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useFeedStore } from '../store';
 import { Sidebar } from '../components/Sidebar';
 import { ItemCard } from '../components/ItemCard';
@@ -8,17 +10,36 @@ import { BriefingPanel } from '../components/BriefingPanel';
 import { Loader2, RefreshCw, Layers } from 'lucide-react';
 
 export default function Home() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const { items, briefing, loading, fetchItems, fetchBriefing, triggerPipeline } = useFeedStore();
-  const userId = 1; // hardcoded for MVP
+  
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
+  const userId = session?.user?.id || 1;
 
   useEffect(() => {
-    fetchItems(userId);
-    fetchBriefing(userId);
-  }, [fetchItems, fetchBriefing]);
+    if (status === 'authenticated') {
+      fetchItems(userId);
+      fetchBriefing(userId);
+    }
+  }, [status, userId, fetchItems, fetchBriefing]);
 
   const handleTrigger = () => {
     triggerPipeline(userId);
   };
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-zinc-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground flex font-sans selection:bg-purple-500/30">
