@@ -1,5 +1,6 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -9,6 +10,15 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: 'read:user user:email repo',
+        },
+      },
+    }),
+    GoogleProvider({
+      clientId: process.env.GOOGLE_ID as string,
+      clientSecret: process.env.GOOGLE_SECRET as string,
+      authorization: {
+        params: {
+          scope: 'openid email profile https://www.googleapis.com/auth/gmail.readonly',
         },
       },
     }),
@@ -28,6 +38,7 @@ export const authOptions: NextAuthOptions = {
               email: user.email || '',
               name: user.name || 'Developer',
               access_token: account.access_token,
+              provider: account.provider, // "github" or "google"
             }),
           });
           

@@ -13,6 +13,7 @@ class SyncUserRequest(BaseModel):
     email: str
     name: str
     access_token: Optional[str] = None
+    provider: Optional[str] = "github"
 
 @router.post("/sync-user")
 async def sync_user(req: SyncUserRequest, db: AsyncSession = Depends(get_db)):
@@ -25,12 +26,12 @@ async def sync_user(req: SyncUserRequest, db: AsyncSession = Depends(get_db)):
         await db.commit()
         await db.refresh(user)
     
-    if req.access_token:
-        # Check if integration already exists
+    if req.access_token and req.provider:
+        # Check if integration already exists for this provider
         int_result = await db.execute(
             select(Integration).where(
                 Integration.user_id == user.id, 
-                Integration.tool_name == "github"
+                Integration.tool_name == req.provider
             )
         )
         integration = int_result.scalars().first()
@@ -41,7 +42,7 @@ async def sync_user(req: SyncUserRequest, db: AsyncSession = Depends(get_db)):
         else:
             new_integration = Integration(
                 user_id=user.id,
-                tool_name="github",
+                tool_name=req.provider,
                 access_token=req.access_token
             )
             db.add(new_integration)

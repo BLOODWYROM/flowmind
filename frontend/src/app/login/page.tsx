@@ -21,13 +21,23 @@ export default function LoginPage() {
             <p className="text-zinc-400">Sign in to access your unified intelligence dashboard.</p>
           </div>
 
-          <button
-            onClick={() => signIn('github', { callbackUrl: '/' })}
-            className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-white text-black hover:bg-zinc-200 transition-all font-semibold rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.1)] group"
-          >
-            <GitBranch size={20} className="text-black group-hover:-translate-y-0.5 transition-transform" />
-            <span>Continue with GitHub</span>
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => signIn('github', { callbackUrl: '/' })}
+              className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-white text-black hover:bg-zinc-200 transition-all font-semibold rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.1)] group"
+            >
+              <GitBranch size={20} className="text-black group-hover:-translate-y-0.5 transition-transform" />
+              <span>Continue with GitHub</span>
+            </button>
+
+            <button
+              onClick={() => signIn('google', { callbackUrl: '/' })}
+              className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-zinc-900 text-white border border-white/10 hover:bg-zinc-800 transition-all font-semibold rounded-xl group"
+            >
+              <Mail size={20} className="text-white group-hover:-translate-y-0.5 transition-transform" />
+              <span>Continue with Google</span>
+            </button>
+          </div>
           
           <div className="mt-6 text-center text-xs text-zinc-500">
             By continuing, you agree to allow FlowMind to securely sync and prioritize your developer notifications.

@@ -49,17 +49,55 @@ async def fetch_data(state: AgentState):
             except Exception as e:
                 print(f"Error fetching GitHub data: {e}")
 
-    # Fallback/Mock data for Gmail (since we don't have Gmail OAuth set up yet)
+        # 2. Fetch Gmail Integration
+        result = await db.execute(
+            select(Integration).where(
+                Integration.user_id == user_id,
+                Integration.tool_name == "google",
+                Integration.is_active == True
+            )
+        )
+        gmail_int = result.scalars().first()
+        
+        if gmail_int and gmail_int.access_token:
+            try:
+                headers = {"Authorization": f"Bearer {gmail_int.access_token}"}
+                async with httpx.AsyncClient() as client:
+                    # Fetch message list
+                    resp = await client.get("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10", headers=headers)
+                    if resp.status_code == 200:
+                        messages = resp.json().get("messages", [])
+                        for msg in messages:
+                            # Fetch message details
+                            m_resp = await client.get(f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{msg['id']}", headers=headers)
+                            if m_resp.status_code == 200:
+                                m_data = m_resp.json()
+                                headers_list = m_data["payload"]["headers"]
+                                subject = next((h["value"] for h in headers_list if h["name"] == "Subject"), "No Subject")
+                                sender = next((h["value"] for h in headers_list if h["name"] == "From"), "Unknown")
+                                items.append({
+                                    "tool_name": "gmail",
+                                    "external_id": msg["id"],
+                                    "title": subject,
+                                    "content": m_data["snippet"],
+                                    "url": f"https://mail.google.com/mail/u/0/#inbox/{msg['id']}",
+                                    "author": sender,
+                                    "timestamp": datetime.datetime.fromtimestamp(int(m_data["internalDate"])/1000).isoformat()
+                                })
+            except Exception as e:
+                print(f"Error fetching Gmail data: {e}")
+
+    # Fallback/Empty message if no data found
     if not items:
         now = datetime.datetime.utcnow()
         items = [
             {
                 "tool_name": "github",
-                "external_id": "mock_pr_1",
+                "external_id": "welcome_1",
                 "title": "Welcome to FlowMind!",
-                "content": "You haven't connected your GitHub account yet, or there are no new notifications. Connect in the sidebar to see real data!",
+                "content": "Connect your GitHub or Google account to see real AI-prioritized notifications here.",
                 "url": "https://github.com",
-                "author": "FlowMind-AI",
+                "author": "FlowMind AI",
                 "timestamp": now.isoformat()
             }
         ]
