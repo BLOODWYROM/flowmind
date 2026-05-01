@@ -20,7 +20,8 @@ export default function Home() {
     }
   }, [status, router]);
 
-  const userId = session?.user?.id || 1;
+  // @ts-ignore
+  const userId = (session?.user as any)?.id || 1;
 
   useEffect(() => {
     if (status === 'authenticated') {
