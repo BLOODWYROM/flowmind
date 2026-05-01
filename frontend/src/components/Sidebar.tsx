@@ -8,6 +8,8 @@ import {
   LogOut 
 } from 'lucide-react';
 
+import { signOut } from 'next-auth/react';
+
 export function Sidebar() {
   return (
     <aside className="w-64 h-screen glass-panel fixed left-0 top-0 border-r border-border flex flex-col p-4 z-10">
@@ -56,10 +58,13 @@ export function Sidebar() {
             <Settings size={18} />
             <span>Settings</span>
           </a>
-          <a href="#" className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-secondary/50 text-muted-foreground hover:text-white transition-colors">
+          <button 
+            onClick={() => signOut()}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-secondary/50 text-muted-foreground hover:text-white transition-colors"
+          >
             <LogOut size={18} />
             <span>Logout</span>
-          </a>
+          </button>
         </nav>
       </div>
     </aside>
