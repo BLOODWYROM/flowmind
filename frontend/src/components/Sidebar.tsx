@@ -2,7 +2,7 @@ import React from 'react';
 import { 
   LayoutDashboard, 
   Settings, 
-  Github, 
+  GitBranch, 
   Mail, 
   BrainCircuit,
   LogOut 
@@ -34,7 +34,7 @@ export function Sidebar() {
           <nav className="space-y-1">
             <div className="flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-secondary/50 text-muted-foreground hover:text-white transition-colors cursor-pointer">
               <div className="flex items-center gap-3">
-                <Github size={18} />
+                <GitBranch size={18} />
                 <span>GitHub</span>
               </div>
               <div className="w-2 h-2 rounded-full bg-green-500"></div>
