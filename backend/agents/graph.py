@@ -30,8 +30,8 @@ async def run_pipeline(user_id: int):
     """
     initial_state = AgentState(user_id=user_id)
     
-    # Run the graph (invoke is sync, but nodes are just processing dictionaries)
-    result = app_graph.invoke(initial_state)
+    # Run the graph (using ainvoke because nodes are async)
+    result = await app_graph.ainvoke(initial_state)
     
     # Save to database
     async with AsyncSessionLocal() as session:

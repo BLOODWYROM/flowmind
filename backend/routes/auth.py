@@ -12,11 +12,10 @@ class SyncUserRequest(BaseModel):
     id: str
     email: str
     name: str
+    access_token: Optional[str] = None
 
 @router.post("/sync-user")
 async def sync_user(req: SyncUserRequest, db: AsyncSession = Depends(get_db)):
-    # Since NextAuth provides string IDs, we will store it, but wait, our User model has Integer ID!
-    # Let's map the email to a user. If the email doesn't exist, create it.
     result = await db.execute(select(User).where(User.email == req.email))
     user = result.scalars().first()
     
@@ -25,6 +24,29 @@ async def sync_user(req: SyncUserRequest, db: AsyncSession = Depends(get_db)):
         db.add(user)
         await db.commit()
         await db.refresh(user)
+    
+    if req.access_token:
+        # Check if integration already exists
+        int_result = await db.execute(
+            select(Integration).where(
+                Integration.user_id == user.id, 
+                Integration.tool_name == "github"
+            )
+        )
+        integration = int_result.scalars().first()
+        
+        if integration:
+            integration.access_token = req.access_token
+            integration.is_active = True
+        else:
+            new_integration = Integration(
+                user_id=user.id,
+                tool_name="github",
+                access_token=req.access_token
+            )
+            db.add(new_integration)
+        
+        await db.commit()
         
     return {"user_id": user.id, "email": user.email, "name": user.name}
 

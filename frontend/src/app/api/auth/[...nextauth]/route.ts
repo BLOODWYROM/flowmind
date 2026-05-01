@@ -6,6 +6,11 @@ export const authOptions: NextAuthOptions = {
     GithubProvider({
       clientId: process.env.GITHUB_ID as string,
       clientSecret: process.env.GITHUB_SECRET as string,
+      authorization: {
+        params: {
+          scope: 'read:user user:email repo',
+        },
+      },
     }),
   ],
   callbacks: {
@@ -22,6 +27,7 @@ export const authOptions: NextAuthOptions = {
               id: user.id,
               email: user.email || '',
               name: user.name || 'Developer',
+              access_token: account.access_token,
             }),
           });
           
