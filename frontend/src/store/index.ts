@@ -15,6 +15,7 @@ export interface FeedItem {
   priority_tag: string;
   ai_explanation: string;
   timestamp: string;
+  url: string;
 }
 
 interface FeedStore {
