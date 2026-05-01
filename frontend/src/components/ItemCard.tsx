@@ -46,10 +46,15 @@ export function ItemCard({ item }: { item: FeedItem }) {
             {isGithub ? <GitBranch size={18} /> : <Mail size={18} />}
           </div>
           <div>
-            <h3 className="font-semibold text-lg text-white group-hover:text-blue-400 transition-colors flex items-center gap-2">
+            <a 
+              href={item.url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-semibold text-lg text-white group-hover:text-blue-400 transition-colors flex items-center gap-2"
+            >
               {item.title}
-              <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-400 cursor-pointer" />
-            </h3>
+              <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-400" />
+            </a>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="font-medium text-zinc-300">{item.author}</span>
               <span>•</span>
