@@ -57,10 +57,20 @@ def prioritize_data(state: AgentState):
             HumanMessage(content=content_to_analyze)
         ])
         
-        # Clean response string (strip markdown JSON blocks if present)
-        resp_text = response.content.replace("```json", "").replace("```", "").strip()
-        analysis_results = json.loads(resp_text)
+        import re
         
+        # Clean response string to find JSON array
+        resp_text = response.content.strip()
+        
+        # Find the first '[' and last ']' to extract just the array
+        match = re.search(r'\[.*\]', resp_text, re.DOTALL)
+        if match:
+            json_str = match.group(0)
+            analysis_results = json.loads(json_str)
+        else:
+            print(f"Failed to find JSON array in LLM response: {resp_text}")
+            analysis_results = []
+            
         # Merge results back
         analysis_map = {res["external_id"]: res for res in analysis_results}
         
@@ -78,7 +88,11 @@ def prioritize_data(state: AgentState):
                 prioritized.append(item)
                 
     except Exception as e:
-        print(f"Error in prioritization: {e}")
+        import traceback
+        print(f"Error in prioritization: {str(e)}")
+        print(traceback.format_exc())
+        if 'response' in locals():
+            print(f"Raw LLM Response: {response.content}")
         # Fallback
         prioritized = items
         
