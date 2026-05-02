@@ -16,7 +16,7 @@ load_dotenv()
 if "GEMINI_API_KEY" in os.environ and "GOOGLE_API_KEY" not in os.environ:
     os.environ["GOOGLE_API_KEY"] = os.environ["GEMINI_API_KEY"]
 
-from .database import engine, Base
+from .database import engine, Base, get_db
 from .routes import auth, feed
 
 @asynccontextmanager
