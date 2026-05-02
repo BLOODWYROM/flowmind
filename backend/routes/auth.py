@@ -26,19 +26,22 @@ async def sync_user(req: SyncUserRequest, db: AsyncSession = Depends(get_db)):
     logger.info(f"Syncing user: {req.email} with ID: {req.id}")
     try:
         # Use req.id (the Google/GitHub ID string) as the primary key
-        result = await db.execute(select(User).where(User.id == req.id))
+        # Check if user already exists by EMAIL for account linking
+        result = await db.execute(select(User).where(User.email == req.email))
         user = result.scalars().first()
         
         if not user:
+            # First time logging in with this email
             user = User(id=req.id, email=req.email, name=req.name, image_url=req.image_url)
             db.add(user)
-            await db.commit()
-            await db.refresh(user)
         else:
+            # Existing user found by email, update details
             user.name = req.name
-            user.email = req.email
             user.image_url = req.image_url
-            await db.commit()
+            # We keep the original user.id to preserve database relationships
+            
+        await db.commit()
+        await db.refresh(user)
         
         if req.access_token and req.provider:
             # Check if integration already exists for this provider
