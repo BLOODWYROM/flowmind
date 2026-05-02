@@ -23,53 +23,97 @@ interface FeedStore {
   briefing: string;
   loading: boolean;
   error: string | null;
+  pipelineStatus: 'idle' | 'running' | 'success' | 'error';
   fetchItems: (userId: number) => Promise<void>;
   fetchBriefing: (userId: number) => Promise<void>;
   triggerPipeline: (userId: number) => Promise<void>;
+  clearError: () => void;
 }
 
-export const useFeedStore = create<FeedStore>((set) => ({
+export const useFeedStore = create<FeedStore>((set, get) => ({
   items: [],
   briefing: '',
   loading: false,
   error: null,
+  pipelineStatus: 'idle',
+
+  clearError: () => set({ error: null }),
 
   fetchItems: async (userId: number) => {
-    set({ loading: true, error: null });
     try {
       const response = await axios.get(`${API_BASE_URL}/feed/items/${userId}`);
-      set({ items: response.data, loading: false });
+      set({ items: response.data });
     } catch (error) {
-      set({ error: 'Failed to fetch items', loading: false });
-      console.error(error);
+      console.error('Failed to fetch items:', error);
     }
   },
 
   fetchBriefing: async (userId: number) => {
-    set({ loading: true, error: null });
     try {
       const response = await axios.get(`${API_BASE_URL}/feed/briefing/${userId}`);
-      set({ briefing: response.data.content, loading: false });
+      set({ briefing: response.data.content });
     } catch (error) {
-      set({ error: 'Failed to fetch briefing', loading: false });
-      console.error(error);
+      console.error('Failed to fetch briefing:', error);
     }
   },
 
   triggerPipeline: async (userId: number) => {
-    set({ loading: true, error: null });
+    set({ loading: true, error: null, pipelineStatus: 'running' });
     try {
       await axios.post(`${API_BASE_URL}/feed/trigger-pipeline/${userId}`);
-      // The pipeline runs in the background. In a real app, we might use WebSockets or polling.
-      // For now, we'll just wait a bit and fetch the items.
-      setTimeout(async () => {
-        const { fetchItems, fetchBriefing } = useFeedStore.getState();
-        await fetchItems(userId);
-        await fetchBriefing(userId);
-        set({ loading: false });
-      }, 5000); // Polling delay
+      
+      // Poll for results — the pipeline runs in background on the server
+      // We check every 3 seconds up to 10 times (30 seconds max)
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      const poll = async () => {
+        attempts++;
+        try {
+          const itemsRes = await axios.get(`${API_BASE_URL}/feed/items/${userId}`);
+          const briefingRes = await axios.get(`${API_BASE_URL}/feed/briefing/${userId}`);
+          
+          const newItems = itemsRes.data;
+          const newBriefing = briefingRes.data.content;
+          const currentItems = get().items;
+          
+          // Check if data has changed (pipeline has finished)
+          const hasNewData = newItems.length !== currentItems.length || 
+            (newItems.length > 0 && currentItems.length > 0 && newItems[0]?.id !== currentItems[0]?.id);
+          
+          if (hasNewData || attempts >= maxAttempts) {
+            set({ 
+              items: newItems, 
+              briefing: newBriefing, 
+              loading: false, 
+              pipelineStatus: hasNewData ? 'success' : 'success'
+            });
+            
+            // Reset status after 3 seconds
+            setTimeout(() => set({ pipelineStatus: 'idle' }), 3000);
+          } else {
+            // Keep polling
+            setTimeout(poll, 3000);
+          }
+        } catch {
+          if (attempts < maxAttempts) {
+            setTimeout(poll, 3000);
+          } else {
+            set({ loading: false, pipelineStatus: 'error', error: 'Pipeline timed out. Please try again.' });
+            setTimeout(() => set({ pipelineStatus: 'idle', error: null }), 5000);
+          }
+        }
+      };
+      
+      // Start polling after an initial delay
+      setTimeout(poll, 4000);
     } catch (error) {
-      set({ error: 'Failed to trigger pipeline', loading: false });
+      set({ 
+        error: 'Failed to trigger pipeline. Check your connection.', 
+        loading: false, 
+        pipelineStatus: 'error' 
+      });
+      setTimeout(() => set({ pipelineStatus: 'idle', error: null }), 5000);
       console.error(error);
     }
   },

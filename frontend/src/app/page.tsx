@@ -7,12 +7,12 @@ import { useFeedStore } from '../store';
 import { Sidebar } from '../components/Sidebar';
 import { ItemCard } from '../components/ItemCard';
 import { BriefingPanel } from '../components/BriefingPanel';
-import { Loader2, RefreshCw, Layers } from 'lucide-react';
+import { Loader2, RefreshCw, Layers, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { items, briefing, loading, fetchItems, fetchBriefing, triggerPipeline } = useFeedStore();
+  const { items, briefing, loading, error, pipelineStatus, fetchItems, fetchBriefing, triggerPipeline } = useFeedStore();
   
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -42,6 +42,32 @@ export default function Home() {
     );
   }
 
+  const getButtonLabel = () => {
+    switch (pipelineStatus) {
+      case 'running': return 'Analyzing...';
+      case 'success': return 'Done!';
+      case 'error': return 'Failed';
+      default: return 'Run Pipeline';
+    }
+  };
+
+  const getButtonIcon = () => {
+    switch (pipelineStatus) {
+      case 'running': return <Loader2 size={18} className="animate-spin" />;
+      case 'success': return <CheckCircle2 size={18} />;
+      case 'error': return <AlertCircle size={18} />;
+      default: return <RefreshCw size={18} />;
+    }
+  };
+
+  const getButtonStyle = () => {
+    switch (pipelineStatus) {
+      case 'success': return 'bg-green-500 text-white hover:bg-green-600';
+      case 'error': return 'bg-red-500 text-white hover:bg-red-600';
+      default: return 'bg-white text-black hover:bg-zinc-200';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex font-sans selection:bg-purple-500/30">
       <Sidebar />
@@ -57,17 +83,32 @@ export default function Home() {
             <button 
               onClick={handleTrigger}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white text-black font-semibold rounded-lg hover:bg-zinc-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+              className={`flex items-center gap-2 px-5 py-2.5 font-semibold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(255,255,255,0.1)] ${getButtonStyle()}`}
             >
-              {loading ? <Loader2 size={18} className="animate-spin" /> : <RefreshCw size={18} />}
-              <span>{loading ? 'Processing...' : 'Run Pipeline'}</span>
+              {getButtonIcon()}
+              <span>{getButtonLabel()}</span>
             </button>
           </header>
 
+          {/* Error Toast */}
+          {error && (
+            <div className="mb-6 flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-in fade-in">
+              <AlertCircle size={18} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Loading state during first pipeline run */}
           {loading && items.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-              <Loader2 size={40} className="animate-spin mb-4 text-zinc-500" />
-              <p>Analyzing notifications with Gemini...</p>
+              <div className="relative mb-6">
+                <div className="w-16 h-16 rounded-full border-2 border-zinc-800 flex items-center justify-center">
+                  <Loader2 size={28} className="animate-spin text-purple-500" />
+                </div>
+                <div className="absolute inset-0 rounded-full bg-purple-500/10 animate-pulse"></div>
+              </div>
+              <p className="text-zinc-300 font-medium mb-1">Analyzing your notifications with Gemini AI...</p>
+              <p className="text-zinc-500 text-sm">This may take up to 30 seconds</p>
             </div>
           )}
 
@@ -78,6 +119,7 @@ export default function Home() {
               <div className="flex items-center gap-2 mb-4 px-1">
                 <Layers size={18} className="text-zinc-400" />
                 <h2 className="text-lg font-semibold text-zinc-200 tracking-tight">Priority Queue</h2>
+                <span className="text-xs text-zinc-500 ml-auto">{items.length} items</span>
               </div>
               
               <div className="space-y-4">
