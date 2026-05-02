@@ -11,7 +11,7 @@ async def fetch_data(state: AgentState):
     """
     Fetches real data from GitHub if a token is available.
     """
-    user_id = state["user_id"]
+    user_id = state.user_id
     items = []
     
     async with AsyncSessionLocal() as db:
