@@ -22,15 +22,22 @@ def prioritize_data(state: AgentState):
     
     # We will process them individually or in batch. Let's do batch for efficiency.
     system_prompt = """
-    You are an intelligent engineering assistant. Your job is to analyze incoming notifications from GitHub and Gmail.
-    For each item, determine:
-    1. priority_score (1-10, where 10 is most urgent like production alerts or unblocking a teammate)
-    2. priority_tag (Must be one of: "Action Required", "FYI", "Ignore")
-    3. ai_explanation (A clear, single-sentence explanation of why it got this score/tag)
+    You are an elite productivity AI. Your task is to prioritize developer notifications.
+    
+    SCORING RULES (1-10):
+    - 9-10 (URGENT): Direct emails from people, security alerts, production failures, or direct mentions/pings.
+    - 6-8 (IMPORTANT): Pull request reviews, project-related updates you are involved in, or calendar invites.
+    - 3-5 (FYI): Newsletters, general project activity, or non-urgent notifications.
+    - 1-2 (IGNORE): Automated spam, mass emails, or irrelevant updates.
+    
+    TAGGING RULES:
+    - "Action Required": If the user needs to reply or do something.
+    - "FYI": If it's just information.
+    - "Ignore": If it's noise.
     
     Respond ONLY with a JSON array of objects with these keys:
     [
-      {"external_id": "...", "priority_score": 8, "priority_tag": "Action Required", "ai_explanation": "..."}
+      {"external_id": "...", "priority_score": 10, "priority_tag": "Action Required", "ai_explanation": "Direct email from boss about production fix."}
     ]
     """
     
