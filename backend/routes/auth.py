@@ -60,7 +60,8 @@ async def sync_user(req: SyncUserRequest, db: AsyncSession = Depends(get_db)):
                     user_id=user.id,
                     tool_name=req.provider,
                     access_token=req.access_token,
-                    refresh_token=req.refresh_token
+                    refresh_token=req.refresh_token,
+                    is_active=True
                 )
                 db.add(new_integration)
             
