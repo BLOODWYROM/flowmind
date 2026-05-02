@@ -7,6 +7,7 @@ import asyncio
 import datetime
 
 # We need a way to run database operations async in the graph, or wrap it.
+from sqlalchemy import delete
 from ..database import AsyncSessionLocal
 from ..models import Item, Summary
 
@@ -35,6 +36,11 @@ async def run_pipeline(user_id: int):
     
     # Save to database
     async with AsyncSessionLocal() as session:
+        # Clear old items for this user before saving new ones
+        await session.execute(
+            delete(Item).where(Item.user_id == user_id)
+        )
+        
         # Save items
         for it in result["prioritized_items"]:
             # Check if exists

@@ -38,23 +38,25 @@ export function ItemCard({ item }: { item: FeedItem }) {
     return 'score-low';
   };
 
+  const handleClick = () => {
+    window.open(item.url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
-    <div className="glass-panel rounded-xl p-5 hover:bg-zinc-800/80 transition-all group">
+    <div 
+      onClick={handleClick}
+      className="glass-panel rounded-xl p-5 hover:bg-zinc-800/80 transition-all group cursor-pointer border border-transparent hover:border-zinc-700/50"
+    >
       <div className="flex justify-between items-start mb-3">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${isGithub ? 'bg-zinc-800 text-white' : 'bg-red-500/10 text-red-500'}`}>
             {isGithub ? <GitBranch size={18} /> : <Mail size={18} />}
           </div>
           <div>
-            <a 
-              href={item.url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="font-semibold text-lg text-white group-hover:text-blue-400 transition-colors flex items-center gap-2"
-            >
+            <h3 className="font-semibold text-lg text-white group-hover:text-blue-400 transition-colors flex items-center gap-2">
               {item.title}
               <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-400" />
-            </a>
+            </h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="font-medium text-zinc-300">{item.author}</span>
               <span>•</span>
@@ -75,7 +77,7 @@ export function ItemCard({ item }: { item: FeedItem }) {
         {item.content}
       </p>
       
-      <div className="flex items-center gap-3 pt-3 border-t border-border">
+      <div className="flex items-center gap-3 pt-3 border-t border-zinc-800/50">
         <span className={`flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${getTagStyle(item.priority_tag)}`}>
           {getTagIcon(item.priority_tag)}
           {item.priority_tag}

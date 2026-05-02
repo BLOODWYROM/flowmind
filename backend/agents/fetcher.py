@@ -63,8 +63,8 @@ async def fetch_data(state: AgentState):
             try:
                 headers = {"Authorization": f"Bearer {gmail_int.access_token}"}
                 async with httpx.AsyncClient() as client:
-                    # Fetch message list
-                    resp = await client.get("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=10", headers=headers)
+                    # Fetch message list (unread only, max 20)
+                    resp = await client.get("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20&q=is:unread", headers=headers)
                     if resp.status_code == 200:
                         messages = resp.json().get("messages", [])
                         for msg in messages:
