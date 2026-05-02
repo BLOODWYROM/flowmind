@@ -9,11 +9,11 @@ export function ItemCard({ item }: { item: FeedItem }) {
   const getTagStyle = (tag: string) => {
     switch (tag) {
       case 'Action Required':
-        return 'tag-action';
+        return 'bg-red-500/20 text-red-400 border border-red-500/30';
       case 'FYI':
-        return 'tag-fyi';
-      case 'Ignore':
-        return 'tag-ignore';
+        return 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30';
+      case 'Can Ignore':
+        return 'bg-green-500/20 text-green-400 border border-green-500/30';
       default:
         return 'bg-zinc-800 text-zinc-300';
     }
@@ -22,11 +22,11 @@ export function ItemCard({ item }: { item: FeedItem }) {
   const getTagIcon = (tag: string) => {
     switch (tag) {
       case 'Action Required':
-        return <AlertTriangle size={14} className="mr-1" />;
+        return <AlertTriangle size={14} className="mr-1.5" />;
       case 'FYI':
-        return <Info size={14} className="mr-1" />;
-      case 'Ignore':
-        return <BellOff size={14} className="mr-1" />;
+        return <Info size={14} className="mr-1.5" />;
+      case 'Can Ignore':
+        return <CheckCircle2 size={14} className="mr-1.5" />;
       default:
         return null;
     }

@@ -13,6 +13,7 @@ export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const { items, briefing, loading, error, pipelineStatus, fetchItems, fetchBriefing, triggerPipeline } = useFeedStore();
+  const [showAll, setShowAll] = React.useState(false);
   
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -116,16 +117,29 @@ export default function Home() {
 
           {!loading && items.length > 0 && (
             <div>
-              <div className="flex items-center gap-2 mb-4 px-1">
-                <Layers size={18} className="text-zinc-400" />
-                <h2 className="text-lg font-semibold text-zinc-200 tracking-tight">Priority Queue</h2>
-                <span className="text-xs text-zinc-500 ml-auto">{items.length} items</span>
+              <div className="flex items-center justify-between mb-4 px-1">
+                <div className="flex items-center gap-2">
+                  <Layers size={18} className="text-zinc-400" />
+                  <h2 className="text-lg font-semibold text-zinc-200 tracking-tight">Priority Queue</h2>
+                </div>
+                <button 
+                  onClick={() => setShowAll(!showAll)}
+                  className="text-xs font-medium text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-zinc-800"
+                >
+                  {showAll ? "Hide low priority" : "Show all notifications"}
+                  <span className="bg-zinc-800 px-1.5 py-0.5 rounded text-[10px]">
+                    {items.length}
+                  </span>
+                </button>
               </div>
               
               <div className="space-y-4">
-                {items.map(item => (
-                  <ItemCard key={item.id} item={item} />
-                ))}
+                {items
+                  .filter(item => showAll || item.priority_tag !== 'Can Ignore')
+                  .map(item => (
+                    <ItemCard key={item.id} item={item} />
+                  ))
+                }
               </div>
             </div>
           )}
