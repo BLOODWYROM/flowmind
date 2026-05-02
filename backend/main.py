@@ -39,3 +39,14 @@ app.include_router(feed.router, prefix="/api/feed", tags=["feed"])
 @app.get("/api/health")
 async def health_check():
     return {"status": "ok"}
+
+@app.get("/api/reset-db")
+async def reset_db():
+    """Nuclear option: Drops all tables and recreates them with the new schema."""
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+            await conn.run_sync(Base.metadata.create_all)
+        return {"status": "success", "message": "Database completely wiped and recreated with the latest schema."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
