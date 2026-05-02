@@ -1,5 +1,5 @@
 import React from 'react';
-import { GitBranch, Mail, AlertTriangle, Info, BellOff, ExternalLink } from 'lucide-react';
+import { GitBranch, Mail, AlertTriangle, Info, BellOff, ExternalLink, CheckCircle2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { FeedItem } from '../store';
 
