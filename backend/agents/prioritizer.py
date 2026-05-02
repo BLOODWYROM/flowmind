@@ -37,7 +37,7 @@ def prioritize_data(state: AgentState):
     
     Respond ONLY with a JSON array of objects with these keys:
     [
-      {"external_id": "...", "priority_score": 1-10, "priority_tag": "Action Required" | "FYI" | "Can Ignore", "ai_explanation": "One line explaining why this matters or doesn't"}
+      {"external_id": "...", "priority_score": 8, "priority_tag": "Action Required", "ai_explanation": "..."}
     ]
     """
     
