@@ -80,7 +80,7 @@ async def fetch_data(state: AgentState):
                                     "external_id": msg["id"],
                                     "title": subject,
                                     "content": m_data["snippet"],
-                                    "url": f"https://mail.google.com/mail/u/0/#inbox/{msg['id']}",
+                                    "url": f"https://mail.google.com/mail/u/0/#all/{m_data['threadId']}",
                                     "author": sender,
                                     "timestamp": datetime.datetime.fromtimestamp(int(m_data["internalDate"])/1000).isoformat()
                                 })
