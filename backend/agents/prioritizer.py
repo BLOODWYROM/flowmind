@@ -36,8 +36,8 @@ Rules:
 Respond in JSON only, no extra text:
 {
     "priority_score": 8,
-    "priority_tag": "Action Required" | "FYI" | "Can Ignore",
-    "ai_explanation": "One sentence explaining why this score"
+    "priority_tag": "Action Required",
+    "ai_explanation": "This email contains an urgent deadline."
 }"""
         
         human_content = f"""
@@ -67,6 +67,9 @@ Body preview: {item.get('content', '')[:300]}
             if match:
                 try:
                     res = json.loads(match.group(0))
+                    print(f"Gemini raw response: {resp_text}")
+                    print(f"Parsed score: {res.get('priority_score')}")
+                    
                     item["priority_score"] = int(res.get("priority_score", 0))
                     item["priority_tag"] = res.get("priority_tag", "FYI")
                     item["ai_explanation"] = res.get("ai_explanation", "Analyzed by AI")
