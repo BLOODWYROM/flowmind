@@ -1,5 +1,7 @@
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
+import logging
+import traceback
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from pydantic import BaseModel
@@ -8,6 +10,7 @@ from ..database import get_db
 from ..models import User, Integration
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 class SyncUserRequest(BaseModel):
     id: str
@@ -20,6 +23,7 @@ class SyncUserRequest(BaseModel):
 
 @router.post("/sync-user")
 async def sync_user(req: SyncUserRequest, db: AsyncSession = Depends(get_db)):
+    logger.info(f"Syncing user: {req.email} with ID: {req.id}")
     try:
         # Use req.id (the Google/GitHub ID string) as the primary key
         result = await db.execute(select(User).where(User.id == req.id))
