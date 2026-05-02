@@ -12,7 +12,7 @@ llm = ChatGoogleGenerativeAI(
 
 def prioritize_data(state: AgentState):
     """
-    Uses Gemini to score and tag fetched items.
+    Uses Gemini to score and tag fetched items individually for higher accuracy.
     """
     items = state.fetched_items
     if not items:
@@ -20,79 +20,73 @@ def prioritize_data(state: AgentState):
     
     prioritized = []
     
-    # We will process them individually or in batch. Let's do batch for efficiency.
-    system_prompt = """
-    You are an elite productivity AI. Your task is to prioritize emails and GitHub notifications.
-    Analyze the following notifications and respond in JSON only.
-    
-    SCORING RULES (1-10):
-    - 9-10 (URGENT): Direct emails from real people, security alerts, production failures, or direct mentions.
-    - 5-8 (IMPORTANT): Work-related updates, pull requests you are assigned to, or calendar invites.
-    - 1-4 (LOW): General newsletters, automated system logs, or mass updates.
-    
-    TAGGING RULES (Choose exactly one):
-    - "Action Required": User must reply, approve, or fix something.
-    - "FYI": Informational but relevant to current work.
-    - "Can Ignore": Newsletters, automated noise, or irrelevant updates.
-    
-    Respond ONLY with a JSON array of objects with these keys:
-    [
-      {"external_id": "...", "priority_score": 8, "priority_tag": "Action Required", "ai_explanation": "..."}
-    ]
-    """
-    
-    content_to_analyze = json.dumps([
-        {
-            "external_id": item["external_id"],
-            "tool": item["tool_name"],
-            "title": item["title"],
-            "content": item["content"],
-            "author": item["author"]
-        } for item in items
-    ], indent=2)
+    # Create individual prompts for each item
+    prompts = []
+    for item in items:
+        system_prompt = """You are an expert email prioritization AI.
+Analyze this email and score its importance from 1-10.
+
+Rules:
+- 9-10: Urgent action needed (deadlines, emergencies, direct requests from important people)
+- 7-8: Important, needs response soon (work emails, opportunities, interviews)
+- 5-6: Good to know but not urgent (updates, newsletters from people you know)
+- 3-4: Low priority (automated notifications, social updates)
+- 1-2: Can ignore (promotional emails, spam, bulk newsletters)
+
+Respond in JSON only, no extra text:
+{
+    "priority_score": 8,
+    "priority_tag": "Action Required" | "FYI" | "Can Ignore",
+    "ai_explanation": "One sentence explaining why this score"
+}"""
+        
+        human_content = f"""
+Email Details:
+Subject: {item.get('title', 'No Subject')}
+From: {item.get('author', 'Unknown')}
+Body preview: {item.get('content', '')[:300]}
+"""
+        prompts.append([
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=human_content)
+        ])
     
     try:
-        response = llm.invoke([
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=content_to_analyze)
-        ])
+        # Run all prompts in parallel
+        print(f"Prioritizing {len(items)} items individually via LLM batch...")
+        responses = llm.batch(prompts)
         
         import re
         
-        # Clean response string to find JSON array
-        resp_text = response.content.strip()
-        
-        # Find the first '[' and last ']' to extract just the array
-        match = re.search(r'\[.*\]', resp_text, re.DOTALL)
-        if match:
-            json_str = match.group(0)
-            analysis_results = json.loads(json_str)
-        else:
-            print(f"Failed to find JSON array in LLM response: {resp_text}")
-            analysis_results = []
+        for idx, response in enumerate(responses):
+            item = items[idx].copy()
+            resp_text = response.content.strip()
             
-        # Merge results back
-        analysis_map = {res["external_id"]: res for res in analysis_results}
-        
-        for item in items:
-            ext_id = item["external_id"]
-            if ext_id in analysis_map:
-                enriched_item = item.copy()
-                enriched_item.update({
-                    "priority_score": analysis_map[ext_id]["priority_score"],
-                    "priority_tag": analysis_map[ext_id]["priority_tag"],
-                    "ai_explanation": analysis_map[ext_id]["ai_explanation"]
-                })
-                prioritized.append(enriched_item)
+            # Extract JSON block
+            match = re.search(r'\{.*\}', resp_text, re.DOTALL)
+            if match:
+                try:
+                    res = json.loads(match.group(0))
+                    item["priority_score"] = int(res.get("priority_score", 0))
+                    item["priority_tag"] = res.get("priority_tag", "FYI")
+                    item["ai_explanation"] = res.get("ai_explanation", "Analyzed by AI")
+                except Exception as parse_e:
+                    print(f"JSON Parse Error for item {idx}: {parse_e}")
+                    item["priority_score"] = 0
+                    item["priority_tag"] = "Can Ignore"
+                    item["ai_explanation"] = "Failed to parse AI response"
             else:
-                prioritized.append(item)
+                print(f"No JSON found for item {idx}. Raw: {resp_text}")
+                item["priority_score"] = 0
+                item["priority_tag"] = "Can Ignore"
+                item["ai_explanation"] = "No JSON found in AI response"
                 
+            prioritized.append(item)
+            
     except Exception as e:
         import traceback
-        print(f"Error in prioritization: {str(e)}")
+        print(f"Error in batch prioritization: {str(e)}")
         print(traceback.format_exc())
-        if 'response' in locals():
-            print(f"Raw LLM Response: {response.content}")
         # Fallback
         prioritized = items
         
