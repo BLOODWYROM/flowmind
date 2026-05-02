@@ -23,12 +23,8 @@ app = FastAPI(title="FlowMind MVP", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://flowmind-phi.vercel.app",
-        "https://flowmind-49n9cn8hy-bloodwyroms-projects.vercel.app",
-        "http://localhost:3000",
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
