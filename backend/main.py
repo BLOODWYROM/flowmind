@@ -68,8 +68,18 @@ async def db_peek(db: AsyncSession = Depends(get_db)):
     
     debug_data = []
     for u in users:
-        int_result = await db.execute(select(Integration.tool_name).where(Integration.user_id == u.id))
-        tools = [r[0] for r in int_result.all()]
+        int_result = await db.execute(select(Integration).where(Integration.user_id == u.id))
+        integrations = int_result.scalars().all()
+        
+        tools = []
+        for i in integrations:
+            tools.append({
+                "name": i.tool_name,
+                "has_token": bool(i.access_token),
+                "token_preview": i.access_token[:10] + "..." if i.access_token else "NONE",
+                "has_refresh": bool(i.refresh_token)
+            })
+            
         debug_data.append({
             "user_id": u.id,
             "email": u.email,
