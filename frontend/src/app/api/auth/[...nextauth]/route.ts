@@ -39,6 +39,7 @@ export const authOptions: NextAuthOptions = {
               id: user.id,
               email: user.email || '',
               name: user.name || 'Developer',
+              image_url: user.image,
               access_token: account.access_token,
               refresh_token: account.refresh_token,
               provider: account.provider, // "github" or "google"

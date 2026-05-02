@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '../../components/Sidebar';
+import { useFeedStore } from '../../store';
 import { 
   User, 
   Mail, 
@@ -18,6 +19,16 @@ import {
 export default function SettingsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { integrationStatus, fetchIntegrationStatus } = useFeedStore();
+
+  // @ts-ignore
+  const userId = (session?.user as any)?.id || 1;
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchIntegrationStatus(userId);
+    }
+  }, [status, userId, fetchIntegrationStatus]);
 
   if (status === 'loading') {
     return (
@@ -54,9 +65,9 @@ export default function SettingsPage() {
             
             <div className="flex items-center gap-4">
               {user?.image ? (
-                <img src={user.image} alt="Avatar" className="w-16 h-16 rounded-full border-2 border-zinc-700" />
+                <img src={user.image} alt="Avatar" className="w-16 h-16 rounded-full border-2 border-zinc-700 shadow-xl" />
               ) : (
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold shadow-xl">
                   {user?.name?.charAt(0) || '?'}
                 </div>
               )}
@@ -87,8 +98,17 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <CheckCircle2 size={16} className="text-green-500" />
-                  <span className="text-green-400 font-medium">Connected</span>
+                  {integrationStatus.gmail ? (
+                    <>
+                      <CheckCircle2 size={16} className="text-green-500" />
+                      <span className="text-green-400 font-medium">Connected</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle size={16} className="text-zinc-500" />
+                      <span className="text-zinc-400 font-medium">Not Connected</span>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -104,8 +124,17 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <XCircle size={16} className="text-zinc-500" />
-                  <span className="text-zinc-400 font-medium">Not Connected</span>
+                  {integrationStatus.github ? (
+                    <>
+                      <CheckCircle2 size={16} className="text-green-500" />
+                      <span className="text-green-400 font-medium">Connected</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle size={16} className="text-zinc-500" />
+                      <span className="text-zinc-400 font-medium">Not Connected</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

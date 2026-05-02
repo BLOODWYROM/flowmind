@@ -24,8 +24,10 @@ interface FeedStore {
   loading: boolean;
   error: string | null;
   pipelineStatus: 'idle' | 'running' | 'success' | 'error';
+  integrationStatus: { github: boolean, gmail: boolean };
   fetchItems: (userId: number) => Promise<void>;
   fetchBriefing: (userId: number) => Promise<void>;
+  fetchIntegrationStatus: (userId: number) => Promise<void>;
   triggerPipeline: (userId: number) => Promise<void>;
   clearError: () => void;
 }
@@ -36,6 +38,7 @@ export const useFeedStore = create<FeedStore>((set, get) => ({
   loading: false,
   error: null,
   pipelineStatus: 'idle',
+  integrationStatus: { github: false, gmail: false },
 
   clearError: () => set({ error: null }),
 
@@ -54,6 +57,15 @@ export const useFeedStore = create<FeedStore>((set, get) => ({
       set({ briefing: response.data.content });
     } catch (error) {
       console.error('Failed to fetch briefing:', error);
+    }
+  },
+
+  fetchIntegrationStatus: async (userId: number) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/auth/status/${userId}`);
+      set({ integrationStatus: response.data });
+    } catch (error) {
+      console.error('Failed to fetch integration status:', error);
     }
   },
 

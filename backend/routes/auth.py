@@ -13,6 +13,7 @@ class SyncUserRequest(BaseModel):
     id: str
     email: str
     name: str
+    image_url: Optional[str] = None
     access_token: Optional[str] = None
     refresh_token: Optional[str] = None
     provider: Optional[str] = "github"
@@ -23,10 +24,14 @@ async def sync_user(req: SyncUserRequest, db: AsyncSession = Depends(get_db)):
     user = result.scalars().first()
     
     if not user:
-        user = User(email=req.email, name=req.name)
+        user = User(email=req.email, name=req.name, image_url=req.image_url)
         db.add(user)
         await db.commit()
         await db.refresh(user)
+    else:
+        user.name = req.name
+        user.image_url = req.image_url
+        await db.commit()
     
     if req.access_token and req.provider:
         # Check if integration already exists for this provider

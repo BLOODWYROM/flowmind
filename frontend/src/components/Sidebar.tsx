@@ -13,11 +13,22 @@ import {
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
+import { useFeedStore } from '../store';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const user = session?.user;
+  const { integrationStatus, fetchIntegrationStatus } = useFeedStore();
+
+  // @ts-ignore
+  const userId = (session?.user as any)?.id || 1;
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      fetchIntegrationStatus(userId);
+    }
+  }, [status, userId, fetchIntegrationStatus]);
 
   return (
     <aside className="w-64 h-screen glass-panel fixed left-0 top-0 border-r border-border flex flex-col p-4 z-10">
@@ -57,7 +68,7 @@ export function Sidebar() {
                 <GitBranch size={18} />
                 <span>GitHub</span>
               </div>
-              <div className="w-2 h-2 rounded-full bg-zinc-600"></div>
+              <div className={`w-2 h-2 rounded-full ${integrationStatus.github ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-zinc-600'}`}></div>
             </a>
             <a 
               href="https://mail.google.com" 
@@ -69,7 +80,7 @@ export function Sidebar() {
                 <Mail size={18} />
                 <span>Gmail</span>
               </div>
-              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+              <div className={`w-2 h-2 rounded-full ${integrationStatus.gmail ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-zinc-600'}`}></div>
             </a>
           </nav>
         </div>

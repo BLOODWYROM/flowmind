@@ -8,6 +8,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True)
     name = Column(String)
+    image_url = Column(String, nullable=True)
     
     integrations = relationship("Integration", back_populates="user")
     items = relationship("Item", back_populates="user")
