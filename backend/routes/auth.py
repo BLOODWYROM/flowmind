@@ -14,6 +14,7 @@ class SyncUserRequest(BaseModel):
     email: str
     name: str
     access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
     provider: Optional[str] = "github"
 
 @router.post("/sync-user")
@@ -39,12 +40,15 @@ async def sync_user(req: SyncUserRequest, db: AsyncSession = Depends(get_db)):
         
         if integration:
             integration.access_token = req.access_token
+            if req.refresh_token:
+                integration.refresh_token = req.refresh_token
             integration.is_active = True
         else:
             new_integration = Integration(
                 user_id=user.id,
                 tool_name=req.provider,
-                access_token=req.access_token
+                access_token=req.access_token,
+                refresh_token=req.refresh_token
             )
             db.add(new_integration)
         

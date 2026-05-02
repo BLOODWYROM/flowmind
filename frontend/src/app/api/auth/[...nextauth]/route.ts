@@ -19,6 +19,8 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           scope: 'openid email profile https://www.googleapis.com/auth/gmail.readonly',
+          access_type: 'offline',
+          prompt: 'consent',
         },
       },
     }),
@@ -38,6 +40,7 @@ export const authOptions: NextAuthOptions = {
               email: user.email || '',
               name: user.name || 'Developer',
               access_token: account.access_token,
+              refresh_token: account.refresh_token,
               provider: account.provider, // "github" or "google"
             }),
           });
