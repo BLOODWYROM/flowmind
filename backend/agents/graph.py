@@ -25,7 +25,7 @@ workflow.add_edge("summarize_data", END)
 
 app_graph = workflow.compile()
 
-async def run_pipeline(user_id: int):
+async def run_pipeline(user_id: str):
     """
     Runs the langgraph pipeline and saves results to the database.
     """

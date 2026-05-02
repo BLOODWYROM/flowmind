@@ -20,81 +20,92 @@ class SyncUserRequest(BaseModel):
 
 @router.post("/sync-user")
 async def sync_user(req: SyncUserRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == req.email))
-    user = result.scalars().first()
-    
-    if not user:
-        user = User(email=req.email, name=req.name, image_url=req.image_url)
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
-    else:
-        user.name = req.name
-        user.image_url = req.image_url
-        await db.commit()
-    
-    if req.access_token and req.provider:
-        # Check if integration already exists for this provider
-        int_result = await db.execute(
-            select(Integration).where(
-                Integration.user_id == user.id, 
-                Integration.tool_name == req.provider
-            )
-        )
-        integration = int_result.scalars().first()
+    try:
+        # Use req.id (the Google/GitHub ID string) as the primary key
+        result = await db.execute(select(User).where(User.id == req.id))
+        user = result.scalars().first()
         
-        if integration:
-            integration.access_token = req.access_token
-            if req.refresh_token:
-                integration.refresh_token = req.refresh_token
-            integration.is_active = True
+        if not user:
+            user = User(id=req.id, email=req.email, name=req.name, image_url=req.image_url)
+            db.add(user)
+            await db.commit()
+            await db.refresh(user)
         else:
-            new_integration = Integration(
-                user_id=user.id,
-                tool_name=req.provider,
-                access_token=req.access_token,
-                refresh_token=req.refresh_token
+            user.name = req.name
+            user.email = req.email
+            user.image_url = req.image_url
+            await db.commit()
+        
+        if req.access_token and req.provider:
+            # Check if integration already exists for this provider
+            int_result = await db.execute(
+                select(Integration).where(
+                    Integration.user_id == user.id, 
+                    Integration.tool_name == req.provider
+                )
             )
-            db.add(new_integration)
-        
-        await db.commit()
-        
-    return {"user_id": user.id, "email": user.email, "name": user.name}
+            integration = int_result.scalars().first()
+            
+            if integration:
+                integration.access_token = req.access_token
+                if req.refresh_token:
+                    integration.refresh_token = req.refresh_token
+                integration.is_active = True
+            else:
+                new_integration = Integration(
+                    user_id=user.id,
+                    tool_name=req.provider,
+                    access_token=req.access_token,
+                    refresh_token=req.refresh_token
+                )
+                db.add(new_integration)
+            
+            await db.commit()
+            
+        return {"user_id": user.id, "email": user.email, "name": user.name}
+    except Exception as e:
+        print(f"Error in sync_user: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 class ConnectToolRequest(BaseModel):
-    user_id: int
+    user_id: str
     tool_name: str # github, gmail
 
 @router.post("/connect-tool")
 async def connect_tool(req: ConnectToolRequest, db: AsyncSession = Depends(get_db)):
-    # Mocking the OAuth connection by just saving a fake token
-    result = await db.execute(
-        select(Integration).where(
-            Integration.user_id == req.user_id, 
-            Integration.tool_name == req.tool_name
+    try:
+        result = await db.execute(
+            select(Integration).where(
+                Integration.user_id == req.user_id, 
+                Integration.tool_name == req.tool_name
+            )
         )
-    )
-    integration = result.scalars().first()
-    
-    if not integration:
-        integration = Integration(
-            user_id=req.user_id,
-            tool_name=req.tool_name,
-            access_token=f"mock_{req.tool_name}_token"
-        )
-        db.add(integration)
-    else:
-        integration.is_active = True
+        integration = result.scalars().first()
         
-    await db.commit()
-    return {"status": "success", "tool": req.tool_name}
+        if not integration:
+            integration = Integration(
+                user_id=req.user_id,
+                tool_name=req.tool_name,
+                access_token=f"mock_{req.tool_name}_token"
+            )
+            db.add(integration)
+        else:
+            integration.is_active = True
+            
+        await db.commit()
+        return {"status": "success", "tool": req.tool_name}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/status/{user_id}")
-async def integration_status(user_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Integration).where(Integration.user_id == user_id))
-    integrations = result.scalars().all()
-    
-    return {
-        "github": any(i.tool_name == "github" and i.is_active for i in integrations),
-        "gmail": any(i.tool_name == "gmail" and i.is_active for i in integrations)
-    }
+async def integration_status(user_id: str, db: AsyncSession = Depends(get_db)):
+    try:
+        result = await db.execute(select(Integration).where(Integration.user_id == user_id))
+        integrations = result.scalars().all()
+        
+        return {
+            "github": any(i.tool_name == "github" and i.is_active for i in integrations),
+            "gmail": any(i.tool_name == "gmail" and i.is_active for i in integrations)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

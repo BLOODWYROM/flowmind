@@ -5,7 +5,7 @@ from .database import Base
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True) # Using OAuth ID as Primary Key
     email = Column(String, unique=True, index=True)
     name = Column(String)
     image_url = Column(String, nullable=True)
@@ -17,7 +17,7 @@ class User(Base):
 class Integration(Base):
     __tablename__ = "integrations"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(String, ForeignKey("users.id"))
     tool_name = Column(String) # "github", "gmail"
     access_token = Column(String)
     refresh_token = Column(String, nullable=True)
@@ -29,7 +29,7 @@ class Integration(Base):
 class Item(Base):
     __tablename__ = "items"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(String, ForeignKey("users.id"))
     tool_name = Column(String)
     external_id = Column(String) # ID from github/gmail
     title = Column(String)
@@ -50,7 +50,7 @@ class Item(Base):
 class Summary(Base):
     __tablename__ = "summaries"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(String, ForeignKey("users.id"))
     date = Column(DateTime, default=datetime.datetime.utcnow)
     content = Column(Text)
 
