@@ -4,7 +4,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 import json
 
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
+    model="gemini-2.0-flash-exp",
     temperature=0.4,
 )
 

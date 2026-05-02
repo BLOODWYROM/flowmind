@@ -6,7 +6,7 @@ import os
 
 # Initialize LLM
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
+    model="gemini-2.0-flash-exp",
     temperature=0.2,
 )
 
