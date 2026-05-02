@@ -71,6 +71,10 @@ async def db_peek(db: AsyncSession = Depends(get_db)):
         int_result = await db.execute(select(Integration).where(Integration.user_id == u.id))
         integrations = int_result.scalars().all()
         
+        # Get actual items to see their scores
+        item_raw = await db.execute(select(Item).where(Item.user_id == u.id).limit(5))
+        db_items = item_raw.scalars().all()
+        
         tools = []
         for i in integrations:
             tools.append({
@@ -84,7 +88,14 @@ async def db_peek(db: AsyncSession = Depends(get_db)):
             "user_id": u.id,
             "email": u.email,
             "item_count": item_counts.get(u.id, 0),
-            "integrations": tools
+            "integrations": tools,
+            "item_samples": [
+                {
+                    "title": it.title[:30] if it.title else "No Title",
+                    "score": it.priority_score,
+                    "tag": it.priority_tag
+                } for it in db_items
+            ]
         })
         
     return debug_data

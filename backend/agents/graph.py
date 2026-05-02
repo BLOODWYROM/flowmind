@@ -53,7 +53,7 @@ async def run_pipeline(user_id: str):
                 url=it["url"],
                 author=it["author"],
                 timestamp=datetime.datetime.fromisoformat(it["timestamp"]),
-                priority_score=it.get("priority_score"),
+                priority_score=int(it.get("priority_score") or 0),
                 priority_tag=it.get("priority_tag"),
                 ai_explanation=it.get("ai_explanation")
             )
