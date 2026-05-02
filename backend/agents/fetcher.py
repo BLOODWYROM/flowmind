@@ -68,14 +68,16 @@ async def fetch_data(state: AgentState):
         
         if gmail_int and gmail_int.access_token:
             try:
+                print(f"CALLING GMAIL API with token: {gmail_int.access_token[:20]}...")
                 headers = {"Authorization": f"Bearer {gmail_int.access_token}"}
                 async with httpx.AsyncClient() as client:
                     resp = await client.get("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=15", headers=headers)
+                    print(f"GMAIL RESPONSE STATUS: {resp.status_code}")
+                    
                     if resp.status_code == 200:
                         messages_data = resp.json().get("messages", [])
-                        print(f"Emails received from Gmail API: {len(messages_data)}")
+                        print(f"SUCCESS: fetched {len(messages_data)} emails")
                         
-                        # Fetch full details for the first few emails
                         for msg in messages_data:
                             m_resp = await client.get(f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{msg['id']}", headers=headers)
                             if m_resp.status_code == 200:
@@ -97,9 +99,9 @@ async def fetch_data(state: AgentState):
                                     "timestamp": datetime.datetime.fromtimestamp(int(m_data["internalDate"])/1000).isoformat()
                                 })
                     else:
-                        print(f"GMAIL API ERROR: {resp.status_code} - {resp.text}")
+                        print(f"GMAIL FETCH FAILED: {resp.status_code} - {resp.text}")
             except Exception as e:
-                print(f"Exception fetching Gmail data: {e}")
+                print(f"GMAIL FETCH FAILED (Exception): {str(e)}")
         else:
             print(f"No active Google integration found for user {user_id}")
 

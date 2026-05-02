@@ -69,4 +69,4 @@ async def run_pipeline(user_id: str):
             
         await session.commit()
     
-    print(f"Pipeline completed for user {user_id}")
+    print(f"Pipeline completed for user {user_id}. Saved {len(result['prioritized_items'])} items.")
