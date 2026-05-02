@@ -59,14 +59,22 @@ async def fetch_data(state: AgentState):
         )
         gmail_int = result.scalars().first()
         
+        print(f"[GMAIL DEBUG] User {user_id}: gmail_int found = {gmail_int is not None}")
+        if gmail_int:
+            print(f"[GMAIL DEBUG] Token exists = {bool(gmail_int.access_token)}, token length = {len(gmail_int.access_token) if gmail_int.access_token else 0}")
+        
         if gmail_int and gmail_int.access_token:
             try:
                 headers = {"Authorization": f"Bearer {gmail_int.access_token}"}
                 async with httpx.AsyncClient() as client:
-                    # Fetch message list (unread only, max 20)
-                    resp = await client.get("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=20&q=is:unread", headers=headers)
+                    # Fetch ALL recent messages (not just unread)
+                    resp = await client.get("https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=15", headers=headers)
+                    print(f"[GMAIL DEBUG] Messages list response: status={resp.status_code}")
+                    if resp.status_code != 200:
+                        print(f"[GMAIL DEBUG] Error response body: {resp.text}")
                     if resp.status_code == 200:
                         messages = resp.json().get("messages", [])
+                        print(f"[GMAIL DEBUG] Found {len(messages)} messages")
                         for msg in messages:
                             # Fetch message details
                             m_resp = await client.get(f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{msg['id']}", headers=headers)
@@ -85,7 +93,9 @@ async def fetch_data(state: AgentState):
                                     "timestamp": datetime.datetime.fromtimestamp(int(m_data["internalDate"])/1000).isoformat()
                                 })
             except Exception as e:
-                print(f"Error fetching Gmail data: {e}")
+                print(f"[GMAIL DEBUG] Exception fetching Gmail data: {e}")
+        else:
+            print(f"[GMAIL DEBUG] No active Google integration found for user {user_id}")
 
     # Fallback/Empty message if no data found
     if not items:
