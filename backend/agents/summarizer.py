@@ -3,9 +3,12 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import SystemMessage, HumanMessage
 import json
 
+import os
+
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.0-flash",
     temperature=0.4,
+    google_api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY"))
 )
 
 def summarize_data(state: AgentState):

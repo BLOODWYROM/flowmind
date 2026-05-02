@@ -8,6 +8,7 @@ import os
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.0-flash",
     temperature=0.2,
+    google_api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY"))
 )
 
 def prioritize_data(state: AgentState):
@@ -59,6 +60,9 @@ Example format:
     human_content = json.dumps(payload, indent=2)
     
     try:
+        print(f"GEMINI KEY EXISTS: {bool(os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY'))}")
+        key_preview = str(os.getenv('GEMINI_API_KEY', os.getenv('GOOGLE_API_KEY', 'NOT SET')))[:10]
+        print(f"GEMINI KEY PREVIEW: {key_preview}...")
         print(f"Prioritizing {len(items)} items in ONE bulk API call...")
         response = llm.invoke([
             SystemMessage(content=system_prompt),
