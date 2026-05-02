@@ -50,3 +50,29 @@ async def reset_db():
         return {"status": "success", "message": "Database completely wiped and recreated with the latest schema."}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+@app.get("/api/debug/db-peek")
+async def db_peek(db: AsyncSession = Depends(get_db)):
+    """Debug endpoint to see if data is actually in the DB."""
+    from sqlalchemy import func
+    from .models import Item, User, Integration
+    
+    # Count items per user
+    item_result = await db.execute(select(Item.user_id, func.count(Item.id)).group_by(Item.user_id))
+    item_counts = {row[0]: row[1] for row in item_result.all()}
+    
+    # List users and their integrations
+    user_result = await db.execute(select(User))
+    users = user_result.scalars().all()
+    
+    debug_data = []
+    for u in users:
+        int_result = await db.execute(select(Integration.tool_name).where(Integration.user_id == u.id))
+        tools = [r[0] for r in int_result.all()]
+        debug_data.append({
+            "user_id": u.id,
+            "email": u.email,
+            "item_count": item_counts.get(u.id, 0),
+            "integrations": tools
+        })
+        
+    return debug_data

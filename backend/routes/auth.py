@@ -109,7 +109,7 @@ async def integration_status(user_id: str, db: AsyncSession = Depends(get_db)):
         
         return {
             "github": any(i.tool_name == "github" and i.is_active for i in integrations),
-            "gmail": any(i.tool_name == "gmail" and i.is_active for i in integrations)
+            "gmail": any(i.tool_name == "google" and i.is_active for i in integrations)
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
