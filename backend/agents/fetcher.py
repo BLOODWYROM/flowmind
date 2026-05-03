@@ -37,12 +37,13 @@ async def fetch_data(state: AgentState):
                     if resp.status_code == 200:
                         notifications = resp.json()
                         for note in notifications[:10]:
+                            url_val = note["subject"].get("url")
                             items.append({
                                 "tool_name": "github",
                                 "external_id": note["id"],
                                 "title": note["subject"]["title"],
                                 "content": f"New notification: {note['reason']}",
-                                "url": note["subject"]["url"].replace("api.github.com/repos", "github.com"), # Simple conversion
+                                "url": url_val.replace("api.github.com/repos", "github.com") if url_val else "https://github.com",
                                 "author": note["repository"]["full_name"],
                                 "timestamp": note["updated_at"]
                             })
