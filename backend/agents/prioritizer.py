@@ -6,7 +6,7 @@ import os
 
 # Initialize LLM
 llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash-latest",
+    model="gemini-1.5-flash-latest-latest",
     temperature=0.2,
     google_api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY"))
 )
