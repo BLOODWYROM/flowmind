@@ -6,9 +6,6 @@ import os
 import re
 import traceback
 
-# Initialize using the newer google-genai SDK (already in requirements.txt)
-_api_key = os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY", ""))
-client = genai.Client(api_key=_api_key)
 MODEL = "gemini-2.0-flash"
 
 def prioritize_data(state: AgentState):
@@ -16,6 +13,15 @@ def prioritize_data(state: AgentState):
     Uses Gemini directly (google-genai SDK) to score and tag fetched items
     in a single bulk API call to avoid rate limits.
     """
+    _api_key = os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY", ""))
+    if not _api_key:
+        print("WARNING: GEMINI_API_KEY is not set.")
+    
+    try:
+        client = genai.Client(api_key=_api_key)
+    except Exception as e:
+        print(f"Failed to initialize Gemini Client: {e}")
+        return {"prioritized_items": state.fetched_items}
     items = state.fetched_items
     if not items:
         return {"prioritized_items": []}

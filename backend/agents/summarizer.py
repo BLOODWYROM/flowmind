@@ -3,14 +3,18 @@ from google import genai
 import json
 import os
 
-_api_key = os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY", ""))
-client = genai.Client(api_key=_api_key)
 MODEL = "gemini-2.0-flash"
 
 def summarize_data(state: AgentState):
     """
     Uses the google-genai SDK to generate a Morning Briefing from prioritized items.
     """
+    _api_key = os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY", ""))
+    try:
+        client = genai.Client(api_key=_api_key)
+    except Exception as e:
+        print(f"Failed to initialize Gemini Client: {e}")
+        return {"summary": "Failed to generate morning briefing due to missing API key."}
     items = state.prioritized_items
     if not items:
         return {"summary": "You're all caught up! No new notifications."}
