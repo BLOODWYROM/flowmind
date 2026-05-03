@@ -1,19 +1,15 @@
 from .schema import AgentState
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import SystemMessage, HumanMessage
+import google.generativeai as genai
 import json
-
 import os
 
-llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash-latest",
-    temperature=0.4,
-    google_api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY"))
-)
+# Initialize direct Gemini model
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY")))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 def summarize_data(state: AgentState):
     """
-    Uses Gemini to generate the Morning Briefing narrative based on prioritized items.
+    Uses Gemini directly to generate the Morning Briefing narrative based on prioritized items.
     """
     items = state.prioritized_items
     if not items:
@@ -38,15 +34,13 @@ def summarize_data(state: AgentState):
         } for item in items
     ], indent=2)
     
+    full_prompt = f"{system_prompt}\n\nNotifications to summarize:\n{content_to_summarize}"
+    
     try:
-        response = llm.invoke([
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=content_to_summarize)
-        ])
-        
-        summary_text = response.content.strip()
+        response = model.generate_content(full_prompt)
+        summary_text = response.text.strip()
     except Exception as e:
-        print(f"Error in summarizer: {e}")
+        print(f"Error in direct summarizer: {e}")
         summary_text = "Failed to generate morning briefing."
         
     return {"summary": summary_text}

@@ -1,33 +1,17 @@
 from .schema import AgentState
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import SystemMessage, HumanMessage
+import google.generativeai as genai
 import json
 import os
+import re
+import traceback
 
-# Initialize LLM
-llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash-latest",
-    temperature=0.2,
-    google_api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY"))
-)
-
-def list_available_models():
-    try:
-        import google.generativeai as genai
-        genai.configure(api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY")))
-        print("LISTING AVAILABLE MODELS:")
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                print(f" - {m.name}")
-    except Exception as e:
-        print(f"Failed to list models: {e}")
-
-# Run once at startup
-list_available_models()
+# Initialize LLM directly with google-generativeai
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY")))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 def prioritize_data(state: AgentState):
     """
-    Uses Gemini to score and tag fetched items in a single bulk API call to avoid 429 rate limits.
+    Uses Gemini directly to score and tag fetched items in a single bulk API call.
     """
     items = state.fetched_items
     if not items:
@@ -72,19 +56,14 @@ Example format:
         })
         
     human_content = json.dumps(payload, indent=2)
+    full_prompt = f"{system_prompt}\n\nItems to analyze:\n{human_content}"
     
     try:
         print(f"GEMINI KEY EXISTS: {bool(os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY'))}")
-        key_preview = str(os.getenv('GEMINI_API_KEY', os.getenv('GOOGLE_API_KEY', 'NOT SET')))[:10]
-        print(f"GEMINI KEY PREVIEW: {key_preview}...")
-        print(f"Prioritizing {len(items)} items in ONE bulk API call...")
-        response = llm.invoke([
-            SystemMessage(content=system_prompt),
-            HumanMessage(content=human_content)
-        ])
+        print(f"Prioritizing {len(items)} items in ONE bulk direct API call...")
         
-        import re
-        resp_text = response.content.strip()
+        response = model.generate_content(full_prompt)
+        resp_text = response.text.strip()
         
         # Extract JSON dictionary block
         match = re.search(r'\{.*\}', resp_text, re.DOTALL)
@@ -110,14 +89,13 @@ Example format:
             except Exception as parse_e:
                 print(f"JSON Parse Error: {parse_e}")
                 print(f"Raw Response: {resp_text}")
-                prioritized = items # fallback
+                prioritized = items
         else:
             print(f"No JSON dictionary found. Raw: {resp_text}")
             prioritized = items
             
     except Exception as e:
-        import traceback
-        print(f"Error in bulk prioritization: {str(e)}")
+        print(f"Error in direct prioritization: {str(e)}")
         print(traceback.format_exc())
         prioritized = items
         
