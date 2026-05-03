@@ -45,7 +45,7 @@ async def fetch_data(state: AgentState):
                                 "content": f"New notification: {note['reason']}",
                                 "url": url_val.replace("api.github.com/repos", "github.com") if url_val else "https://github.com",
                                 "author": note["repository"]["full_name"],
-                                "timestamp": note["updated_at"]
+                                "timestamp": datetime.datetime.strptime(note["updated_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=datetime.timezone.utc).isoformat()
                             })
             except Exception as e:
                 print(f"Error fetching GitHub data: {e}")
@@ -102,7 +102,7 @@ async def fetch_data(state: AgentState):
                                     "content": m_data["snippet"],
                                     "url": f"https://mail.google.com/mail/u/0/#all/{m_data['threadId']}",
                                     "author": sender,
-                                    "timestamp": datetime.datetime.fromtimestamp(int(m_data["internalDate"])/1000).isoformat()
+                                    "timestamp": datetime.datetime.fromtimestamp(int(m_data["internalDate"])/1000, tz=datetime.timezone.utc).isoformat()
                                 })
                     else:
                         print(f"GMAIL FETCH FAILED: {resp.status_code} - {resp.text}")
@@ -113,7 +113,7 @@ async def fetch_data(state: AgentState):
 
     # Fallback/Empty message if no data found
     if not items:
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         items = [
             {
                 "tool_name": "github",
