@@ -6,7 +6,7 @@ import os
 import re
 import traceback
 
-MODEL = "gemini-1.5-flash-001"
+MODEL = "gemini-1.5-flash"
 
 def prioritize_data(state: AgentState):
     """

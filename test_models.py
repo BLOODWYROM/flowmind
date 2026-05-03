@@ -1,5 +1,15 @@
-import os
-import google.generativeai as genai
+from dotenv import load_dotenv
+load_dotenv('backend/.env')
 
-# Try to use a default or dummy key just to see if it imports and works locally if possible
-# If not, I can just write a quick script and print the exception without API key
+from google import genai
+import os
+
+try:
+    # Use api_key from environment if not provided automatically
+    client = genai.Client()
+    print("Models containing 'flash':")
+    for m in client.models.list():
+        if "flash" in m.name:
+            print(f"- {m.name}")
+except Exception as e:
+    print(f"Error: {e}")
