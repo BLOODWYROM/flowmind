@@ -52,7 +52,7 @@ async def run_pipeline(user_id: str):
                 content=it["content"],
                 url=it["url"],
                 author=it["author"],
-                timestamp=datetime.datetime.fromisoformat(it["timestamp"]),
+                timestamp=datetime.datetime.fromisoformat(it["timestamp"]).replace(tzinfo=None),
                 priority_score=int(it.get("priority_score") or 0),
                 priority_tag=it.get("priority_tag"),
                 ai_explanation=it.get("ai_explanation")
