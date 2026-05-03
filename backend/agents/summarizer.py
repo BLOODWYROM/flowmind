@@ -3,7 +3,7 @@ from google import genai
 import json
 import os
 
-MODEL = "gemini-2.0-flash"
+MODEL = "gemini-1.5-flash"
 
 def summarize_data(state: AgentState):
     """
