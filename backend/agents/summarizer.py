@@ -1,5 +1,6 @@
 from .schema import AgentState
 from google import genai
+from google.genai import types
 import json
 import os
 
@@ -11,7 +12,10 @@ def summarize_data(state: AgentState):
     """
     _api_key = os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY", ""))
     try:
-        client = genai.Client(api_key=_api_key)
+        client = genai.Client(
+            api_key=_api_key,
+            http_options=types.HttpOptions(api_version="v1")
+        )
     except Exception as e:
         print(f"Failed to initialize Gemini Client: {e}")
         return {"summary": "Failed to generate morning briefing due to missing API key."}

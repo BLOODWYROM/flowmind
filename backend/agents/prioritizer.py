@@ -18,7 +18,11 @@ def prioritize_data(state: AgentState):
         print("WARNING: GEMINI_API_KEY is not set.")
     
     try:
-        client = genai.Client(api_key=_api_key)
+        # Pass http_options api_version='v1' to fix the 404 on 1.5-flash
+        client = genai.Client(
+            api_key=_api_key, 
+            http_options=types.HttpOptions(api_version="v1")
+        )
     except Exception as e:
         print(f"Failed to initialize Gemini Client: {e}")
         return {"prioritized_items": state.fetched_items}
