@@ -6,10 +6,24 @@ import os
 
 # Initialize LLM
 llm = ChatGoogleGenerativeAI(
-    model="gemini-1.5-flash",
+    model="gemini-1.5-flash-latest",
     temperature=0.2,
     google_api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY"))
 )
+
+def list_available_models():
+    try:
+        import google.generativeai as genai
+        genai.configure(api_key=os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY")))
+        print("LISTING AVAILABLE MODELS:")
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                print(f" - {m.name}")
+    except Exception as e:
+        print(f"Failed to list models: {e}")
+
+# Run once at startup
+list_available_models()
 
 def prioritize_data(state: AgentState):
     """
