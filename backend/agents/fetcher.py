@@ -111,6 +111,53 @@ async def fetch_data(state: AgentState):
         else:
             print(f"No active Google integration found for user {user_id}")
 
+        # 3. Fetch Slack Integration
+        print("SLACK FETCH STARTED")
+        result = await db.execute(
+            select(Integration).where(
+                Integration.user_id == user_id,
+                Integration.tool_name == "slack",
+                Integration.is_active == True
+            )
+        )
+        slack_int = result.scalars().first()
+        
+        if slack_int and slack_int.access_token:
+            try:
+                print(f"CALLING SLACK API with token: {slack_int.access_token[:10]}...")
+                headers = {"Authorization": f"Bearer {slack_int.access_token}"}
+                
+                # We attempt to fetch recent DMs or mentions using search.messages
+                # Note: This requires the 'search:read' scope in Slack API
+                async with httpx.AsyncClient() as client:
+                    resp = await client.get(
+                        "https://slack.com/api/search.messages?query=is:unread&count=5", 
+                        headers=headers
+                    )
+                    
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        if data.get("ok"):
+                            messages = data.get("messages", {}).get("matches", [])
+                            for msg in messages:
+                                items.append({
+                                    "tool_name": "slack",
+                                    "external_id": msg.get("iid", msg.get("ts")),
+                                    "title": f"Message in #{msg.get('channel', {}).get('name', 'Unknown')}",
+                                    "content": msg.get("text", "No content"),
+                                    "url": msg.get("permalink", "https://slack.com"),
+                                    "author": msg.get("username", "Unknown"),
+                                    "timestamp": datetime.datetime.fromtimestamp(float(msg.get("ts", 0)), tz=datetime.timezone.utc).isoformat()
+                                })
+                        else:
+                            print(f"SLACK SEARCH FAILED: {data.get('error')}")
+                    else:
+                        print(f"SLACK FETCH HTTP ERROR: {resp.status_code}")
+            except Exception as e:
+                print(f"SLACK FETCH FAILED (Exception): {str(e)}")
+        else:
+            print(f"No active Slack integration found for user {user_id}")
+
     # Fallback/Empty message if no data found
     if not items:
         now = datetime.datetime.now(datetime.timezone.utc)

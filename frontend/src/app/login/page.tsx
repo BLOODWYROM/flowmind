@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { signIn } from 'next-auth/react';
-import { BrainCircuit, GitBranch, Mail } from 'lucide-react';
+import { BrainCircuit, GitBranch, Mail, MessageSquare } from 'lucide-react';
 
 export default function LoginPage() {
   return (
@@ -36,6 +36,14 @@ export default function LoginPage() {
             >
               <Mail size={20} className="text-white group-hover:-translate-y-0.5 transition-transform" />
               <span>Continue with Google</span>
+            </button>
+
+            <button
+              onClick={() => signIn('slack', { callbackUrl: '/' })}
+              className="w-full flex items-center justify-center gap-3 px-6 py-3.5 bg-[#4A154B] text-white border border-white/10 hover:bg-[#3d113e] transition-all font-semibold rounded-xl group"
+            >
+              <MessageSquare size={20} className="text-white group-hover:-translate-y-0.5 transition-transform" />
+              <span>Continue with Slack</span>
             </button>
           </div>
           

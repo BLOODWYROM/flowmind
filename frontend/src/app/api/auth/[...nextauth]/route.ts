@@ -1,6 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
+import SlackProvider from "next-auth/providers/slack";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -21,6 +22,15 @@ export const authOptions: NextAuthOptions = {
           scope: 'openid email profile https://www.googleapis.com/auth/gmail.readonly',
           access_type: 'offline',
           prompt: 'consent',
+        },
+      },
+    }),
+    SlackProvider({
+      clientId: process.env.SLACK_ID as string,
+      clientSecret: process.env.SLACK_SECRET as string,
+      authorization: {
+        params: {
+          scope: 'openid profile email', // Basic login scopes
         },
       },
     }),

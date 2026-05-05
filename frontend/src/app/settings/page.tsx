@@ -13,7 +13,8 @@ import {
   ExternalLink,
   CheckCircle2,
   XCircle,
-  Loader2
+  Loader2,
+  MessageSquare
 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -125,6 +126,32 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   {integrationStatus.github ? (
+                    <>
+                      <CheckCircle2 size={16} className="text-green-500" />
+                      <span className="text-green-400 font-medium">Connected</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle size={16} className="text-zinc-500" />
+                      <span className="text-zinc-400 font-medium">Not Connected</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Slack Account */}
+              <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-900/50 border border-zinc-800/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-[#4A154B]/20">
+                    <MessageSquare size={18} className="text-[#E01E5A]" />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium">Slack</p>
+                    <p className="text-zinc-500 text-xs">Unread messages and mentions</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  {integrationStatus.slack ? (
                     <>
                       <CheckCircle2 size={16} className="text-green-500" />
                       <span className="text-green-400 font-medium">Connected</span>
