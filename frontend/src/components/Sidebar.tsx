@@ -9,7 +9,8 @@ import {
   GitBranch, 
   Mail, 
   BrainCircuit,
-  LogOut 
+  LogOut,
+  MessageSquare
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
@@ -81,6 +82,18 @@ export function Sidebar() {
                 <span>Gmail</span>
               </div>
               <div className={`w-2 h-2 rounded-full ${integrationStatus.gmail ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-zinc-600'}`}></div>
+            </a>
+            <a 
+              href="https://slack.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center justify-between px-3 py-2.5 rounded-md hover:bg-secondary/50 text-muted-foreground hover:text-white transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <MessageSquare size={18} />
+                <span>Slack</span>
+              </div>
+              <div className={`w-2 h-2 rounded-full ${integrationStatus.slack ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-zinc-600'}`}></div>
             </a>
           </nav>
         </div>
