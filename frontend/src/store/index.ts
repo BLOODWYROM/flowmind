@@ -24,7 +24,7 @@ interface FeedStore {
   loading: boolean;
   error: string | null;
   pipelineStatus: 'idle' | 'running' | 'success' | 'error';
-  integrationStatus: { github: boolean, gmail: boolean };
+  integrationStatus: { github: boolean, gmail: boolean, slack: boolean };
   fetchItems: (userId: number) => Promise<void>;
   fetchBriefing: (userId: number) => Promise<void>;
   fetchIntegrationStatus: (userId: number) => Promise<void>;
@@ -38,7 +38,7 @@ export const useFeedStore = create<FeedStore>((set, get) => ({
   loading: false,
   error: null,
   pipelineStatus: 'idle',
-  integrationStatus: { github: false, gmail: false },
+  integrationStatus: { github: false, gmail: false, slack: false },
 
   clearError: () => set({ error: null }),
 
