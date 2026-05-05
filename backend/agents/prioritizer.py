@@ -1,31 +1,27 @@
 from .schema import AgentState
-from google import genai
-from google.genai import types
+from groq import Groq
 import json
 import os
 import re
 import traceback
 
-MODEL = "gemini-2.0-flash"
+MODEL = "llama3-8b-8192"
 
 def prioritize_data(state: AgentState):
     """
-    Uses Gemini directly (google-genai SDK) to score and tag fetched items
+    Uses Groq API to score and tag fetched items
     in a single bulk API call to avoid rate limits.
     """
-    _api_key = os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY", ""))
+    _api_key = os.environ.get("GROQ_API_KEY", "")
     if not _api_key:
-        print("WARNING: GEMINI_API_KEY is not set.")
+        print("WARNING: GROQ_API_KEY is not set.")
     
     try:
-        # Pass http_options api_version='v1' to fix the 404 on 1.5-flash
-        client = genai.Client(
-            api_key=_api_key, 
-            http_options=types.HttpOptions(api_version="v1")
-        )
+        client = Groq(api_key=_api_key)
     except Exception as e:
-        print(f"Failed to initialize Gemini Client: {e}")
+        print(f"Failed to initialize Groq Client: {e}")
         return {"prioritized_items": state.fetched_items}
+    
     items = state.fetched_items
     if not items:
         return {"prioritized_items": []}
@@ -69,17 +65,19 @@ Example format:
         })
 
     human_content = json.dumps(payload, indent=2)
-    full_prompt = f"{system_prompt}\n\nItems to analyze:\n{human_content}"
 
     try:
-        print(f"GEMINI KEY EXISTS: {bool(_api_key)}")
-        print(f"Prioritizing {len(items)} items using google-genai SDK (model: {MODEL})...")
+        print(f"GROQ KEY EXISTS: {bool(_api_key)}")
+        print(f"Prioritizing {len(items)} items using Groq SDK (model: {MODEL})...")
 
-        response = client.models.generate_content(
+        response = client.chat.completions.create(
             model=MODEL,
-            contents=full_prompt
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Items to analyze:\n{human_content}"}
+            ]
         )
-        resp_text = response.text.strip()
+        resp_text = response.choices[0].message.content.strip()
 
         # Strip markdown fences if present
         resp_text = resp_text.replace("```json", "").replace("```", "").strip()

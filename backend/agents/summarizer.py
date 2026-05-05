@@ -1,24 +1,21 @@
 from .schema import AgentState
-from google import genai
-from google.genai import types
+from groq import Groq
 import json
 import os
 
-MODEL = "gemini-2.0-flash"
+MODEL = "llama3-8b-8192"
 
 def summarize_data(state: AgentState):
     """
-    Uses the google-genai SDK to generate a Morning Briefing from prioritized items.
+    Uses the Groq API to generate a Morning Briefing from prioritized items.
     """
-    _api_key = os.environ.get("GEMINI_API_KEY", os.environ.get("GOOGLE_API_KEY", ""))
+    _api_key = os.environ.get("GROQ_API_KEY", "")
     try:
-        client = genai.Client(
-            api_key=_api_key,
-            http_options=types.HttpOptions(api_version="v1")
-        )
+        client = Groq(api_key=_api_key)
     except Exception as e:
-        print(f"Failed to initialize Gemini Client: {e}")
+        print(f"Failed to initialize Groq Client: {e}")
         return {"summary": "Failed to generate morning briefing due to missing API key."}
+    
     items = state.prioritized_items
     if not items:
         return {"summary": "You're all caught up! No new notifications."}
@@ -40,14 +37,15 @@ Start with a greeting like "Good morning!" """
         } for item in items
     ], indent=2)
 
-    full_prompt = f"{system_prompt}\n\nNotifications:\n{content_to_summarize}"
-
     try:
-        response = client.models.generate_content(
+        response = client.chat.completions.create(
             model=MODEL,
-            contents=full_prompt
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Notifications:\n{content_to_summarize}"}
+            ]
         )
-        summary_text = response.text.strip()
+        summary_text = response.choices[0].message.content.strip()
     except Exception as e:
         print(f"Error in summarizer: {e}")
         summary_text = "Failed to generate morning briefing."
