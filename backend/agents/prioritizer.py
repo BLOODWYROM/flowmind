@@ -53,15 +53,15 @@ Example format:
   }
 }"""
 
-    # Build the payload
+    # Build the payload, capping at 30 items to avoid Groq Free Tier TPM limits
     payload = []
-    for item in items:
+    for item in items[:30]:
         payload.append({
             "external_id": item["external_id"],
             "tool": item.get("tool_name", "unknown"),
             "subject": item.get("title", "No Subject"),
             "sender": item.get("author", "Unknown"),
-            "body_preview": item.get("content", "")[:300]
+            "body_preview": item.get("content", "")[:100]  # Reduced from 300 to 100
         })
 
     human_content = json.dumps(payload, indent=2)
