@@ -5,7 +5,7 @@ import os
 import re
 import traceback
 
-MODEL = "llama3-8b-8192"
+MODEL = "llama-3.1-8b-instant"
 
 def prioritize_data(state: AgentState):
     """

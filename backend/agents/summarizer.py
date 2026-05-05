@@ -3,7 +3,7 @@ from groq import Groq
 import json
 import os
 
-MODEL = "llama3-8b-8192"
+MODEL = "llama-3.1-8b-instant"
 
 def summarize_data(state: AgentState):
     """
